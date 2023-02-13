@@ -15,7 +15,7 @@ GET http://localhost:3000/todos/?category=LEARNING&priority=HIGH
 
 ###
 
-GET http://localhost:3000/todos/4/
+GET http://localhost:3000/todos/7/
 
 ###
 GET http://localhost:3000/agenda/?date=2021-01-12
@@ -26,11 +26,11 @@ Content-Type: application/json
 
 {
   "id": 6,
-  "todo": "Finalize event theme",
+  "todo": "Learn Rust",
   "priority": "LOW",
   "status": "TO DO",
   "category": "HOME",
-  "dueDate": "2021-02-22"
+  "dueDate": "2021-05-22"
 }
 ###
 PUT http://localhost:3000/todos/4/
@@ -39,3 +39,37 @@ Content-Type: application/json
 {
       "priority": "HIGH"
     }
+
+###
+PUT http://localhost:3000/todos/4/
+Content-Type: application/json
+
+{
+      "status": "DONE"
+    }
+
+###
+PUT http://localhost:3000/todos/4/
+Content-Type: application/json
+
+{
+      "todo": "Clean the garden"
+    }
+###
+PUT http://localhost:3000/todos/4/
+Content-Type: application/json
+
+ {
+      "category": "LEARNING"
+    }
+
+###
+PUT http://localhost:3000/todos/4/
+Content-Type: application/json
+
+{
+      "dueDate": "2021-0-12"
+    }
+
+###
+DELETE  http://localhost:3000/todos/6/

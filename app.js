@@ -26,6 +26,58 @@ const initializeDBAndServer = async () => {
 
 initializeDBAndServer();
 
+// middleware Functions 
+
+const checkPriority = async (request, response, next) => {
+  const { priority } = request.body;
+  const priorityList = ["HIGH", "MEDIUM", "LOW"];
+  const checkList =
+    (priorityList.includes(priority) === false && priority !== undefined) || (priorityList.includes(request.query.priority) === false && request.query.priority !== undefined);
+  if (checkList) {
+    response.status(400);
+    response.send("Invalid Todo Priority");
+  } else {
+    next();
+  }
+};
+const checkStatus = async (request, response, next) => {
+  const { status } = request.body;
+  const statusList = ["TO DO", "IN PROGRESS", "DONE"];
+  const checkList =
+    (statusList.includes(status) === false && status !== undefined ) || (statusList.includes(request.query.status) === false && request.query.status !== undefined);
+  if (checkList) {
+    response.status(400);
+    response.send("Invalid Todo Status");
+  } else {
+    next();
+  }
+};
+const checkCategory = async (request, response, next) => {
+  const { category } = request.body;
+  const categoryList = ["WORK", "HOME", "LEARNING"];
+  const checkList =
+    (categoryList.includes(category) === false && category !== undefined)  || (categoryList.includes(request.query.category) === false && request.query.category !== undefined) ;
+  if (checkList) {
+    response.status(400);
+    response.send("Invalid Todo Category");
+  } else {
+    next();
+  }
+};
+const checkDate = async (request, response, next) => {
+  const { dueDate } = request.body;
+  const validReqDate = isValid(new Date(dueDate)) === false
+  const isTrue = isValid(new Date(request.query.date))
+  const result = (validReqDate && dueDate !== undefined) || (isValid(new Date (request.query.date) !== false) && request.query.date !== undefined) ;
+  if (result) {
+    response.status(400);
+    response.send("Invalid Due Date");
+  } else {
+    next();
+  }
+};
+
+
 // Get Todo list API
 
 const hasStatus = (query) => {
@@ -47,7 +99,10 @@ const hasCategoryAndPriority = (query) => {
   return query.category !== undefined && query.priority !== undefined;
 };
 
-app.get("/todos/", async (request, response) => {
+app.get("/todos/",checkPriority,
+  checkStatus,
+  checkCategory,
+  checkDate, async (request, response) => {
   const { search_q = "", status, category, priority } = request.query;
   let getBookQuery = "";
   switch (true) {
@@ -212,7 +267,10 @@ app.get("/agenda/", async (request, response) => {
 
 // create new todo API
 
-app.post("/todos/", async (request, response) => {
+app.post("/todos/",checkPriority,
+  checkStatus,
+  checkCategory,
+  checkDate, async (request, response) => {
   const { id, todo, priority, status, category, dueDate } = request.body;
   const addTodoQuery = `
     INSERT INTO 
@@ -226,57 +284,11 @@ app.post("/todos/", async (request, response) => {
         '${category}',
         '${dueDate}'
         );`;
-  await db.run(addTodoQuery);
+  const dbResponse = await db.run(addTodoQuery);
   response.send("Todo Successfully Added");
 });
 
 // update Todo API
-const checkPriority = async (request, response, next) => {
-  const { priority } = request.body;
-  const priorityList = ["HIGH", "MEDIUM", "LOW"];
-  const checkList =
-    priorityList.includes(priority) === false && priority !== undefined;
-  if (checkList) {
-    response.status(400);
-    response.send("Invalid Todo Priority");
-  } else {
-    next();
-  }
-};
-const checkStatus = async (request, response, next) => {
-  const { status } = request.body;
-  const statusList = ["TO DO", "IN PROGRESS", "DONE"];
-  const checkList =
-    statusList.includes(status) === false && status !== undefined;
-  if (checkList) {
-    response.status(400);
-    response.send("Invalid Todo Status");
-  } else {
-    next();
-  }
-};
-const checkCategory = async (request, response, next) => {
-  const { category } = request.body;
-  const categoryList = ["WORK", "HOME", "LEARNING"];
-  const checkList =
-    categoryList.includes(category) === false && category !== undefined;
-  if (checkList) {
-    response.status(400);
-    response.send("Invalid Todo Category");
-  } else {
-    next();
-  }
-};
-const checkDate = async (request, response, next) => {
-  const { date } = request.body;
-  const result = isValid(new Date(date));
-  if (result && date !== undefined) {
-    response.status(400);
-    response.send("Invalid Due Date");
-  } else {
-    next();
-  }
-};
 
 app.put(
   "/todos/:todoId/",
@@ -339,7 +351,7 @@ app.put(
         due_date = '${dueDate}'
         WHERE
         id = ${todoId};`;
-        responseData = "Priority Updated";
+        responseData = "Due Date Updated";
         break;
       default:
         break;
@@ -348,5 +360,18 @@ app.put(
     response.send(responseData)
   
 });
+
+// delete a todo API
+
+app.delete("/todos/:todoId/", async (request,response) => {
+    const {todoId} = request.params
+   const  deleteTodoQuery = `
+        DELETE FROM
+        todo
+        WHERE
+        id = ${todoId};`;
+    await db.run(deleteTodoQuery)
+    response.send("Todo Deleted")
+})
 
 module.exports = app
